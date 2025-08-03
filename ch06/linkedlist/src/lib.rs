@@ -53,25 +53,22 @@ impl<T> LinkedList<T> {
     /// Appends an element to the end of of the list. If the list is empty,
     /// the element becomes the first element of the list.
     pub fn append(&mut self, t: T) {
-        match &self.head {
-            Some(head) => {
-                let mut next = head.clone();
-                while next.as_ref().borrow().next.is_some() {
-                    let n = next
-                        .as_ref()
-                        .borrow()
-                        .next
-                        .as_ref()
-                        .unwrap()
-                        .clone();
-                    next = n;
-                }
-                next.as_ref().borrow_mut().next =
-                    Some(Rc::new(RefCell::new(ListItem::new(t))));
-            }
-            None => {
-                self.head = Some(Rc::new(RefCell::new(ListItem::new(t))));
-            }
+        let new_element_rc = Rc::new(RefCell::new(ListItem::new(t)));
+
+        if self.head.is_none() {
+            self.head = Some(new_element_rc);
+            return;
+        }
+
+        let mut previous_node_ptr: Option<Rc<RefCell<ListItem<T>>>> = None;
+        let mut current_node_ptr = self.head.clone();
+        while let Some(node) = current_node_ptr.clone() {
+            let borrowed_node = node.borrow();
+            previous_node_ptr = current_node_ptr.clone();
+             current_node_ptr = borrowed_node.next.clone();
+        }
+        if let Some(node) = previous_node_ptr.clone() {
+            node.borrow_mut().next = Some(new_element_rc.clone());
         }
     }
     /// Returns an iterator over the list.
